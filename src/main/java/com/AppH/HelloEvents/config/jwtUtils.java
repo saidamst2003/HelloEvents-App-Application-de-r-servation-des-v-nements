@@ -25,7 +25,6 @@ public class jwtUtils {
 
     public String generateToken(String username,String email) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("email", email); //
         return createToken(claims,username);
     }
 
@@ -46,7 +45,8 @@ public class jwtUtils {
     }
 
     //validate token
-    public boolean validateToken(String token, UserDetails userDetails) {
+    public   boolean validateToken(String token, UserDetails userDetails)
+ {
         String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())&& !isTokenExpired(token));
 
@@ -76,7 +76,5 @@ private <T> T extiratClaim(String token, Function<Claims, T> claimsResolver) {
                 .parseClaimsJws(token)
                 .getBody();
     }
-    public String extractEmail(String token) {
-        return extiratClaim(token, claims -> claims.get("email", String.class));
-    }
+
 }
