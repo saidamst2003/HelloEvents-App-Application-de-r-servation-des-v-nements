@@ -15,14 +15,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component
-@RequiredArgsConstructor
+
 public class JwtFilter extends OncePerRequestFilter {
 
     private final CustemUserService custemUserService;
     private final jwtUtils JwtUtils;
+
+    public JwtFilter(CustemUserService custemUserService, jwtUtils jwtUtils) {
+        this.custemUserService = custemUserService;
+        JwtUtils = jwtUtils;
+    }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 

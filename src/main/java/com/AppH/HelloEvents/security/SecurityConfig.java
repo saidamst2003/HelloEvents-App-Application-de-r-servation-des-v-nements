@@ -1,9 +1,7 @@
 package com.AppH.HelloEvents.security;
 
-
 import com.AppH.HelloEvents.filter.JwtFilter;
 import com.AppH.HelloEvents.service.CustemUserService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,31 +16,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
     private final CustemUserService custemUserService;
     private final JwtFilter jwtFilter;
+
+    public SecurityConfig(CustemUserService custemUserService, JwtFilter jwtFilter) {
+        this.custemUserService = custemUserService;
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder )throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =http.getSharedObject(AuthenticationManagerBuilder.class);
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(custemUserService).passwordEncoder(passwordEncoder);
         return authenticationManagerBuilder.build();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/*").permitAll()
+                        auth.requestMatchers("/api/auth/**").permitAll()
                                 .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                                        .build();
-
+                .build();
     }
-
 }

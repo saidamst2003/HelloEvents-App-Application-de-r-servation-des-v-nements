@@ -19,11 +19,12 @@ import java.util.function.Function;
 public class jwtUtils {
 
     @Value("${app.secret-key}")
-    private String secretkey;
-    @Value("${app.expiration-time}")
-    private String expirationtime;
+    private String secretKey;
 
-    public String generateToken(String username,String email) {
+    @Value("${app.expiration-time}")
+    private Long expirationTime;
+
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims,username);
     }
@@ -33,16 +34,16 @@ public class jwtUtils {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date((System.currentTimeMillis()+expirationtime)))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(SignatureAlgorithm.HS256, getSignKey())
                 .compact();
-
     }
 
     private Key getSignKey() {
-        byte[] keyBytes = secretkey.getBytes();
+        byte[] keyBytes = secretKey.getBytes();
         return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
     }
+
 
     //validate token
     public   boolean validateToken(String token, UserDetails userDetails)
