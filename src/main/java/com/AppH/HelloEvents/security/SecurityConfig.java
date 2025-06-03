@@ -22,7 +22,7 @@ public class SecurityConfig {
     private final CustemUserService custemUserService;
     private final JwtFilter jwtFilter;
 
-    public SecurityConfig(CustemUserService custemUserService, JwtFilter jwtFilter) {
+    public SecurityConfig(CustemUserService custemUserService,JwtFilter jwtFilter) {
         this.custemUserService = custemUserService;
         this.jwtFilter = jwtFilter;
     }

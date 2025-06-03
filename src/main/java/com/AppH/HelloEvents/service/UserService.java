@@ -10,27 +10,34 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-
 public class UserService {
 
-@Autowired
-    private UserReposetory userRepository;
+    private final UserReposetory userRepository;
 
+    @Autowired
+    public UserService(UserReposetory userRepository) {
+        this.userRepository = userRepository;
+    }
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
 
+    public Page<User> getUsersByRole(String role, Pageable pageable) {
+        return userRepository.findByRolesName(role, pageable);
+    }
 
+    public Optional<User> getUserByUsername(String username) {
+        return Optional.ofNullable(userRepository.findByUsername(username));
+    }
 
-    public Optional<User> findByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
-    }
-
-    public Page<User> findByRole(String role, Pageable pageable) {
-        return userRepository.findByRole(role, pageable);
-    }
-    public int countUsersByRole(String role) {
-        return userRepository.countUserByrole(role);
     }
 }

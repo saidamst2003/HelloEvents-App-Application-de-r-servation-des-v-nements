@@ -9,15 +9,18 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface UserReposetory extends JpaRepository<User, Integer> {
-//User findByUsername(String username) ;
+User findByUsername(String username) ;
 
 
   Optional<User> findByEmail(String email);
 
   boolean existsByEmail(String email);
 
-  Page<User> findByRole(String role, Pageable pageable);
+  @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
+  Page<User> findByRoleName(String roleName, Pageable pageable);
 
-  @Query(value = " select count(users.id) from users µwhere role=:role",nativeQuery = true)
-  int  countUserByrole(String role);
+  Page<User> findByRolesName(String roleName, Pageable pageable);
+
+//  @Query(value = " select count(users.id) from users where role=:role",nativeQuery = true)
+//  int  countUserByrole(String role);
 }

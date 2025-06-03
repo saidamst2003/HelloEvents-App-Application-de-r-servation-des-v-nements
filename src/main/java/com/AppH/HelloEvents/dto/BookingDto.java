@@ -32,4 +32,8 @@ public class BookingDto {
         private LocalDateTime cancelledAt;
         private String cancellationReason;
         private LocalDateTime createdAt;
+
+
     }
+
+
