@@ -34,7 +34,7 @@ public class jwtUtils {
         Map<String, Object> claims = new HashMap<>();
         String token = createToken(claims, username);
 
-        System.out.println("✅ Generated token for [" + username + "]: " + token);
+        System.out.println("Generated token for [" + username + "]: " + token);
 
         return token;
     }
@@ -50,7 +50,7 @@ public class jwtUtils {
     }
 
     private Key getSignKey() {
-        System.out.println("🔐 SecretKey being used: " + secretKey);
+        System.out.println(" SecretKey being used: " + secretKey);
         byte[] keyBytes = secretKey.getBytes();
         return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
     }
