@@ -1,91 +1,49 @@
 package com.AppH.HelloEvents.model;
 
-
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "events")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 1000)
     private String description;
 
-    @Column(name = "short_description")
-    private String shortDescription;
+    private LocalDateTime date;
 
-    @Column(name = "start_date", nullable = false)
-    private LocalDateTime startDate;
-
-    @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
-
-    @Column(nullable = false)
     private String location;
 
-    @Column
-    private String address;
+    private int capacity;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    // Getters et Setters
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price;
+    public Long getId() { return id; }
 
-    @Column(name = "max_capacity")
-    private Integer maxCapacity;
+    public void setId(Long id) { this.id = id; }
 
-    @Column(name = "available_seats")
-    private Integer availableSeats;
+    public String getTitle() { return title; }
 
-    @Column(nullable = false)
-    private String category;
+    public void setTitle(String title) { this.title = title; }
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EventStatus status = EventStatus.ACTIVE;
+    public String getDescription() { return description; }
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public void setDescription(String description) { this.description = description; }
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public LocalDateTime getDate() { return date; }
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Booking> bookings;
+    public void setDate(LocalDateTime date) { this.date = date; }
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (availableSeats == null && maxCapacity != null) {
-            availableSeats = maxCapacity;
-        }
-    }
+    public String getLocation() { return location; }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    public void setLocation(String location) { this.location = location; }
 
-    // Enum pour le statut de l'événement
-    public enum EventStatus {
-        ACTIVE, CANCELLED, COMPLETED, DRAFT
-    }
+    public int getCapacity() { return capacity; }
+
+    public void setCapacity(int capacity) { this.capacity = capacity; }
 }

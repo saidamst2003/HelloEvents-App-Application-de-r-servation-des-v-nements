@@ -1,48 +1,64 @@
 package com.AppH.HelloEvents.dto;
 
-import com.AppH.HelloEvents.model.Event;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.Data;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-    @Data
-    public class EventDtO{
-        private Long id;
+public class EventDtO {
 
-        @NotBlank(message = "Le titre est obligatoire")
-        private String title;
+    private Integer id;
+    private String title;
+    private String description;
+    private String location;
+    private LocalDateTime eventDate;
 
-        private String description;
-        private String shortDescription;
+    public EventDtO() {}
 
-        @NotNull(message = "La date de début est obligatoire")
-        private LocalDateTime startDate;
-
-        @NotNull(message = "La date de fin est obligatoire")
-        private LocalDateTime endDate;
-
-        @NotBlank(message = "Le lieu est obligatoire")
-        private String location;
-
-        private String address;
-        private String imageUrl;
-
-        @Positive(message = "Le prix doit être positif")
-        private BigDecimal price;
-
-        @Positive(message = "La capacité maximale doit être positive")
-        private Integer maxCapacity;
-
-        private Integer availableSeats;
-
-        @NotBlank(message = "La catégorie est obligatoire")
-        private String category;
-
-        private Event.EventStatus status;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+    public EventDtO(Integer id, String title, String description, String location, LocalDateTime eventDate) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.location = location;
+        this.eventDate = eventDate;
     }
+
+    // Getters & Setters
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public LocalDateTime getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(LocalDateTime eventDate) {
+        this.eventDate = eventDate;
+    }
+}
