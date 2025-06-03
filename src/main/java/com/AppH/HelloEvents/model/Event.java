@@ -1,42 +1,26 @@
 package com.AppH.HelloEvents.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "events")
 public class Event {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     private String title;
-
     private String description;
-
     private String location;
+    private LocalDate date;
+    private String category;
+    private int availableSeats;
 
-    private LocalDateTime eventDate;
-
-    // Constructeurs
-
-    public Event() {}
-
-    public Event(String title, String description, String location, LocalDateTime eventDate) {
-        this.title = title;
-        this.description = description;
-        this.location = location;
-        this.eventDate = eventDate;
-    }
-
-    // Getters & Setters
-
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -64,11 +48,27 @@ public class Event {
         this.location = location;
     }
 
-    public LocalDateTime getEventDate() {
-        return eventDate;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getAvailableSeats() {
+        return availableSeats;
+    }
+
+    public void setAvailableSeats(int availableSeats) {
+        this.availableSeats = availableSeats;
     }
 }

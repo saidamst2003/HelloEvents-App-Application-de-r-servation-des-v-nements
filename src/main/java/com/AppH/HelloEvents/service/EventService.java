@@ -1,15 +1,12 @@
 package com.AppH.HelloEvents.service;
 
-
 import com.AppH.HelloEvents.dto.EventDtO;
 import com.AppH.HelloEvents.model.Event;
 import com.AppH.HelloEvents.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
 public class EventService {
@@ -17,41 +14,37 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
-    public Event createEvent(EventDtO eventDto) {
-        Event event = new Event(
-                eventDto.getTitle(),
-                eventDto.getDescription(),
-                eventDto.getLocation(),
-                eventDto.getEventDate()
-        );
+    public Event createEvent(EventDtO dto) {
+        Event event = new Event();
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setLocation(dto.getLocation());
+        event.setDate(dto.getDate());
+        event.setCategory(dto.getCategory());
+        event.setAvailableSeats(dto.getAvailableSeats());
         return eventRepository.save(event);
     }
 
-    public Optional<Event> getEventById(Integer id) {
-        return eventRepository.findById(id);
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
     }
 
-    public Page<Event> getAllEvents(Pageable pageable) {
-        return eventRepository.findAll(pageable);
+    public Event getEventById(Long id) {
+        return eventRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
     }
 
-    public Page<Event> searchEventsByTitle(String title, Pageable pageable) {
-        return eventRepository.findByTitleContainingIgnoreCase(title, pageable);
+    public Event updateEvent(Long id, EventDtO dto) {
+        Event existing = getEventById(id);
+        existing.setTitle(dto.getTitle());
+        existing.setDescription(dto.getDescription());
+        existing.setLocation(dto.getLocation());
+        existing.setDate(dto.getDate());
+        existing.setCategory(dto.getCategory());
+        existing.setAvailableSeats(dto.getAvailableSeats());
+        return eventRepository.save(existing);
     }
 
-    public Event updateEvent(Integer id, EventDtO eventDto) throws Exception {
-        Event existingEvent = eventRepository.findById(id)
-                .orElseThrow(() -> new Exception("Event not found"));
-
-        existingEvent.setTitle(eventDto.getTitle());
-        existingEvent.setDescription(eventDto.getDescription());
-        existingEvent.setLocation(eventDto.getLocation());
-        existingEvent.setEventDate(eventDto.getEventDate());
-
-        return eventRepository.save(existingEvent);
-    }
-
-    public void deleteEvent(Integer id) {
+    public void deleteEvent(Long id) {
         eventRepository.deleteById(id);
     }
 }

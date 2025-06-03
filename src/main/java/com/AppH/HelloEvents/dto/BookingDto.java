@@ -27,13 +27,10 @@ public class BookingDto {
         private Integer numberOfTickets;
 
         private BigDecimal totalAmount;
-        private Booking.BookingStatus status;
+        private
+        Booking.BookingStatus status;
         private LocalDateTime bookingDate;
         private LocalDateTime cancelledAt;
         private String cancellationReason;
         private LocalDateTime createdAt;
-
-
     }
-
-

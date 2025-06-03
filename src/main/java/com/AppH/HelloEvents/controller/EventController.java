@@ -3,64 +3,44 @@ package com.AppH.HelloEvents.controller;
 import com.AppH.HelloEvents.dto.EventDtO;
 import com.AppH.HelloEvents.model.Event;
 import com.AppH.HelloEvents.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/events")
+@CrossOrigin(origins = "*")
 public class EventController {
 
-    @Autowired
-    private EventService eventService;
+        @Autowired
+        private EventService eventService;
 
-    @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody EventDtO eventDto) {
-        Event event = eventService.createEvent(eventDto);
-        return ResponseEntity.ok(event);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Event> getEvent(@PathVariable Integer id) {
-        return eventService.getEventById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<Event>> getAllEvents(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String title) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Event> events;
-
-        if (title != null && !title.isEmpty()) {
-            events = eventService.searchEventsByTitle(title, pageable);
-        } else {
-            events = eventService.getAllEvents(pageable);
+        @PostMapping
+        public ResponseEntity<Event> createEvent(@RequestBody @Valid EventDtO eventDTO) {
+            return ResponseEntity.ok(eventService.createEvent(eventDTO));
         }
 
-        return ResponseEntity.ok(events);
-    }
+        @GetMapping
+        public List<Event> getAllEvents() {
+            return eventService.getAllEvents();
+        }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Integer id, @RequestBody EventDtO eventDto) {
-        try {
-            Event updatedEvent = eventService.updateEvent(id, eventDto);
-            return ResponseEntity.ok(updatedEvent);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+        @GetMapping("/{id}")
+        public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+            return ResponseEntity.ok(eventService.getEventById(id));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody @Valid EventDtO eventDTO) {
+            return ResponseEntity.ok(eventService.updateEvent(id, eventDTO));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+            eventService.deleteEvent(id);
+            return ResponseEntity.noContent().build();
         }
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Integer id) {
-        eventService.deleteEvent(id);
-        return ResponseEntity.noContent().build();
-    }
-}
