@@ -4,46 +4,71 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "events")
 public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String title;
 
-    @Column(length = 1000)
     private String description;
-
-    private LocalDateTime date;
 
     private String location;
 
-    private int capacity;
+    private LocalDateTime eventDate;
 
-    // Getters et Setters
+    // Constructeurs
 
-    public Long getId() { return id; }
+    public Event() {}
 
-    public void setId(Long id) { this.id = id; }
+    public Event(String title, String description, String location, LocalDateTime eventDate) {
+        this.title = title;
+        this.description = description;
+        this.location = location;
+        this.eventDate = eventDate;
+    }
 
-    public String getTitle() { return title; }
+    // Getters & Setters
 
-    public void setTitle(String title) { this.title = title; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getDescription() { return description; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public LocalDateTime getDate() { return date; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getLocation() { return location; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public void setLocation(String location) { this.location = location; }
+    public String getLocation() {
+        return location;
+    }
 
-    public int getCapacity() { return capacity; }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public LocalDateTime getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(LocalDateTime eventDate) {
+        this.eventDate = eventDate;
+    }
 }
