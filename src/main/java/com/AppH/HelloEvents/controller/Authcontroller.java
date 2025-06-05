@@ -1,10 +1,14 @@
 package com.AppH.HelloEvents.controller;
 
 import com.AppH.HelloEvents.config.jwtUtils;
+import com.AppH.HelloEvents.dto.UserDto;
+import com.AppH.HelloEvents.model.Role;
 import com.AppH.HelloEvents.model.User;
+import com.AppH.HelloEvents.repository.RoleRepository;
 import com.AppH.HelloEvents.repository.UserReposetory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,11 +19,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping("/api/auth")
 public class Authcontroller {
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     private static final Logger log = LoggerFactory.getLogger(Authcontroller.class);
 
@@ -28,33 +38,61 @@ public class Authcontroller {
     private final jwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
 
-    public Authcontroller(UserReposetory userReposetory, PasswordEncoder passwordEncoder, jwtUtils jwtUtils, AuthenticationManager authenticationManager) {
+    public Authcontroller(UserReposetory userReposetory, PasswordEncoder passwordEncoder,
+                          jwtUtils jwtUtils, AuthenticationManager authenticationManager) {
         this.userReposetory = userReposetory;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
     }
 
-    // Register endpoint
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        log.info("Register attempt for username: {}", user.getUsername());
+    public ResponseEntity<?> register(@RequestBody UserDto userDTO) {
+        log.info("Register attempt for username: {}", userDTO.getUsername());
 
-        if (userReposetory.findByUsername(user.getUsername()) != null) {
-            log.warn("Username already exists: {}", user.getUsername());
+        if (userReposetory.findByUsername(userDTO.getUsername()) != null) {
+            log.warn("Username already exists: {}", userDTO.getUsername());
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        log.info("Encrypted password: {}", user.getPassword());
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : userDTO.getRoles()) {
+            Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new RuntimeException("Le rôle n'existe pas: " + roleName));
+            roles.add(role);
+        }
+
+        user.setRoles(roles);
 
         User savedUser = userReposetory.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
 
-        return ResponseEntity.ok(savedUser);
-    }
+        return ResponseEntity.ok(savedUser);}
+
 
     // Login endpoint
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         String username = loginRequest.get("username");
