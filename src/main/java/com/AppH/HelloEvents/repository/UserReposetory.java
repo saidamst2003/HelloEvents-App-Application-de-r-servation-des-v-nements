@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface UserReposetory extends JpaRepository<User, Integer> {
+public interface UserReposetory extends JpaRepository<User, Long> {
+
 User findByUsername(String username) ;
 
 

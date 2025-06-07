@@ -19,12 +19,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-@CrossOrigin(origins = "http://localhost:4200")
+
 @RestController
 @RequestMapping("/api/auth")
 public class Authcontroller {
@@ -56,55 +53,86 @@ public class Authcontroller {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserDto userDTO) {
-        log.info("Register attempt for username: {}", userDTO.getUsername());
+    public ResponseEntity<?> register(@RequestBody Map<String, Object> registrationData) {
+        try {
+            log.info("Registration attempt with data: {}", registrationData);
 
-        // Check if username already exists
-        if (userReposetory.findByUsername(userDTO.getUsername()) != null) {
-            log.warn("Username already exists: {}", userDTO.getUsername());
-            return ResponseEntity.badRequest().body("Username already exists");
-        }
+            // Extract data from the request
+            String username = (String) registrationData.get("username");
+            String email = (String) registrationData.get("email");
+            String password = (String) registrationData.get("password");
 
-        // Check if email already exists
-        if (userReposetory.existsByEmail(userDTO.getEmail())) {
-            log.warn("Email already exists: {}", userDTO.getEmail());
-            return ResponseEntity.badRequest().body("Email already exists");
-        }
+            // Handle roles from Angular format
+            List<Map<String, Object>> rolesData = (List<Map<String, Object>>) registrationData.get("roles");
+            Set<String> roleNames = new HashSet<>();
 
-        // Create new user
-        User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-
-        Set<Role> roles = new HashSet<>();
-
-        // Handle role assignment
-        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
-            for (String roleName : userDTO.getRoles()) {
-                // Ensure role name starts with "ROLE_"
-                String normalizedRoleName = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName.toUpperCase();
-
-                // Only allow ADMIN and CLIENT roles
-                if (normalizedRoleName.equals("ROLE_ADMIN") || normalizedRoleName.equals("ROLE_CLIENT")) {
-                    Role role = roleRepository.findByName(normalizedRoleName)
-                            .orElseGet(() -> createRoleIfNotExists(normalizedRoleName));
-                    roles.add(role);
-                } else {
-                    log.warn("Invalid role requested: {}", roleName);
-                    return ResponseEntity.badRequest().body("Invalid role: " + roleName + ". Only ADMIN and CLIENT roles are allowed.");
+            if (rolesData != null && !rolesData.isEmpty()) {
+                for (Map<String, Object> roleData : rolesData) {
+                    String roleName = (String) roleData.get("name");
+                    if (roleName != null) {
+                        roleNames.add(roleName);
+                    }
                 }
             }
-        } else {
-            // Assign default CLIENT role if no roles provided
-            Role defaultRole = roleRepository.findByName("ROLE_CLIENT")
-                    .orElseGet(() -> createRoleIfNotExists("ROLE_CLIENT"));
-            roles.add(defaultRole);
-        }
 
-        user.setRoles(roles);
+            // Validate required fields
+            if (username == null || username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username is required");
+            }
+            if (password == null || password.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required");
+            }
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
 
-        try {
+            log.info("Register attempt for username: {}, roles: {}", username, roleNames);
+
+            // Check if username already exists
+            if (userReposetory.findByUsername(username) != null) {
+                log.warn("Username already exists: {}", username);
+                return ResponseEntity.badRequest().body("Username already exists");
+            }
+
+            // Check if email already exists
+            if (userReposetory.existsByEmail(email)) {
+                log.warn("Email already exists: {}", email);
+                return ResponseEntity.badRequest().body("Email already exists");
+            }
+
+            // Create new user
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(password));
+
+            Set<Role> roles = new HashSet<>();
+
+            // Handle role assignment
+            if (!roleNames.isEmpty()) {
+                for (String roleName : roleNames) {
+                    // Ensure role name starts with "ROLE_"
+                    String normalizedRoleName = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName.toUpperCase();
+
+                    // Only allow ADMIN and CLIENT roles
+                    if (normalizedRoleName.equals("ROLE_ADMIN") || normalizedRoleName.equals("ROLE_CLIENT")) {
+                        Role role = roleRepository.findByName(normalizedRoleName)
+                                .orElseGet(() -> createRoleIfNotExists(normalizedRoleName));
+                        roles.add(role);
+                    } else {
+                        log.warn("Invalid role requested: {}", roleName);
+                        return ResponseEntity.badRequest().body("Invalid role: " + roleName + ". Only ADMIN and CLIENT roles are allowed.");
+                    }
+                }
+            } else {
+                // Assign default CLIENT role if no roles provided
+                Role defaultRole = roleRepository.findByName("ROLE_CLIENT")
+                        .orElseGet(() -> createRoleIfNotExists("ROLE_CLIENT"));
+                roles.add(defaultRole);
+            }
+
+            user.setRoles(roles);
+
             User savedUser = userReposetory.save(user);
             log.info("User registered successfully: {} with roles: {}",
                     savedUser.getUsername(),
@@ -119,10 +147,11 @@ public class Authcontroller {
             response.put("message", "User registered successfully");
 
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            log.error("Error saving user: {}", e.getMessage());
+            log.error("Error during registration: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error occurred while registering user");
+                    .body("Error occurred while registering user: " + e.getMessage());
         }
     }
 
@@ -136,7 +165,6 @@ public class Authcontroller {
             return savedRole;
         });
     }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         String username = loginRequest.get("username");

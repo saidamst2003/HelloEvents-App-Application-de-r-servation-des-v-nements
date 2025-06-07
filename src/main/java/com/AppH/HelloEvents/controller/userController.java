@@ -54,4 +54,5 @@ public class userController {
         Optional<User> user = userService.getUserByEmail(email);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 }
