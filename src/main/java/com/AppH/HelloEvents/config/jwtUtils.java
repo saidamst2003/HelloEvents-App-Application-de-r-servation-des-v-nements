@@ -40,11 +40,17 @@ public class jwtUtils {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
+        Date now = new Date();
+        Date expiration = new Date(System.currentTimeMillis() + expirationTime);
+
+        System.out.println("Issued At: " + now);
+        System.out.println("Expiration At: " + expiration);
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setIssuedAt(now)
+                .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS256, getSignKey())
                 .compact();
     }

@@ -6,6 +6,7 @@ import com.AppH.HelloEvents.model.Role;
 import com.AppH.HelloEvents.model.User;
 import com.AppH.HelloEvents.repository.RoleRepository;
 import com.AppH.HelloEvents.repository.UserReposetory;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/auth")
 public class Authcontroller {
@@ -46,52 +47,95 @@ public class Authcontroller {
         this.authenticationManager = authenticationManager;
     }
 
+    // Initialize default roles when application starts
+    @PostConstruct
+    public void initRoles() {
+        createRoleIfNotExists("ROLE_ADMIN");
+        createRoleIfNotExists("ROLE_CLIENT");
+        log.info("Default roles initialized: ROLE_ADMIN, ROLE_CLIENT");
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserDto userDTO) {
         log.info("Register attempt for username: {}", userDTO.getUsername());
 
+        // Check if username already exists
         if (userReposetory.findByUsername(userDTO.getUsername()) != null) {
             log.warn("Username already exists: {}", userDTO.getUsername());
             return ResponseEntity.badRequest().body("Username already exists");
         }
 
+        // Check if email already exists
+        if (userReposetory.existsByEmail(userDTO.getEmail())) {
+            log.warn("Email already exists: {}", userDTO.getEmail());
+            return ResponseEntity.badRequest().body("Email already exists");
+        }
+
+        // Create new user
         User user = new User();
         user.setUsername(userDTO.getUsername());
         user.setEmail(userDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         Set<Role> roles = new HashSet<>();
-        for (String roleName : userDTO.getRoles()) {
-            Role role = roleRepository.findByName(roleName)
-                    .orElseThrow(() -> new RuntimeException("Le rôle n'existe pas: " + roleName));
-            roles.add(role);
+
+        // Handle role assignment
+        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            for (String roleName : userDTO.getRoles()) {
+                // Ensure role name starts with "ROLE_"
+                String normalizedRoleName = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName.toUpperCase();
+
+                // Only allow ADMIN and CLIENT roles
+                if (normalizedRoleName.equals("ROLE_ADMIN") || normalizedRoleName.equals("ROLE_CLIENT")) {
+                    Role role = roleRepository.findByName(normalizedRoleName)
+                            .orElseGet(() -> createRoleIfNotExists(normalizedRoleName));
+                    roles.add(role);
+                } else {
+                    log.warn("Invalid role requested: {}", roleName);
+                    return ResponseEntity.badRequest().body("Invalid role: " + roleName + ". Only ADMIN and CLIENT roles are allowed.");
+                }
+            }
+        } else {
+            // Assign default CLIENT role if no roles provided
+            Role defaultRole = roleRepository.findByName("ROLE_CLIENT")
+                    .orElseGet(() -> createRoleIfNotExists("ROLE_CLIENT"));
+            roles.add(defaultRole);
         }
 
         user.setRoles(roles);
 
-        User savedUser = userReposetory.save(user);
-        log.info("User registered successfully: {}", savedUser.getUsername());
+        try {
+            User savedUser = userReposetory.save(user);
+            log.info("User registered successfully: {} with roles: {}",
+                    savedUser.getUsername(),
+                    savedUser.getRoles().stream().map(Role::getName).toArray());
 
-        return ResponseEntity.ok(savedUser);}
+            // Create response without sensitive information
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", savedUser.getId());
+            response.put("username", savedUser.getUsername());
+            response.put("email", savedUser.getEmail());
+            response.put("roles", savedUser.getRoles().stream().map(Role::getName).toArray());
+            response.put("message", "User registered successfully");
 
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error saving user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while registering user");
+        }
+    }
 
-    // Login endpoint
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // Helper method to create roles if they don't exist
+    private Role createRoleIfNotExists(String roleName) {
+        return roleRepository.findByName(roleName).orElseGet(() -> {
+            Role role = new Role();
+            role.setName(roleName);
+            Role savedRole = roleRepository.save(role);
+            log.info("Created new role: {}", roleName);
+            return savedRole;
+        });
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
@@ -100,8 +144,8 @@ public class Authcontroller {
 
         log.info("Login attempt for username: {}", username);
 
-        if (username == null || password == null) {
-            log.error("Username or password is null");
+        if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
+            log.error("Username or password is null or empty");
             return ResponseEntity.badRequest().body("Username and password are required");
         }
 
@@ -113,9 +157,15 @@ public class Authcontroller {
             if (authentication.isAuthenticated()) {
                 String token = jwtUtils.generateToken(username);
 
+                // Get user details for response
+                User user = userReposetory.findByUsername(username);
+
                 Map<String, Object> authData = new HashMap<>();
                 authData.put("token", token);
                 authData.put("type", "Bearer");
+                authData.put("username", user.getUsername());
+                authData.put("email", user.getEmail());
+                authData.put("roles", user.getRoles().stream().map(Role::getName).toArray());
 
                 log.info("Login successful for username: {}", username);
                 return ResponseEntity.ok(authData);
@@ -128,5 +178,11 @@ public class Authcontroller {
             log.error("Authentication exception for username {}: {}", username, e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
+    }
+
+    // Endpoint to get available roles
+    @GetMapping("/roles")
+    public ResponseEntity<?> getAvailableRoles() {
+        return ResponseEntity.ok(new String[]{"ADMIN", "CLIENT"});
     }
 }

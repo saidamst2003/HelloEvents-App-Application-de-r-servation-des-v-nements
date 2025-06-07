@@ -25,7 +25,7 @@ public class SecurityConfig {
     private final CustemUserService custemUserService;
     private final JwtFilter jwtFilter;
 
-    public SecurityConfig(CustemUserService custemUserService,JwtFilter jwtFilter) {
+    public SecurityConfig(CustemUserService custemUserService, JwtFilter jwtFilter) {
         this.custemUserService = custemUserService;
         this.jwtFilter = jwtFilter;
     }
@@ -46,31 +46,43 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
-                                .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/roles").permitAll()
 
-//        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                        // Events endpoints - Updated for ADMIN and CLIENT roles
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").hasAnyRole("ADMIN", "CLIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/events/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/events/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ADMIN")
+
+                        // User management - Only ADMIN
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+
+                        // Profile and reservations - Both roles
+                        .requestMatchers("/api/profile/**").hasAnyRole("ADMIN", "CLIENT")
+                        .requestMatchers("/api/reservations/**").hasAnyRole("ADMIN", "CLIENT")
+
+                        // Any other request requires authentication
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-
-        @Bean
-        public WebMvcConfigurer corsConfigurer() {
-            return new WebMvcConfigurer() {
-                @Override
-                public void addCorsMappings(CorsRegistry registry) {
-                    registry.addMapping("/**")
-                            .allowedOrigins("http://localhost:4200") // Angular origin
-                            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                            .allowedHeaders("*")
-                            .allowCredentials(true);
-                }
-            };
-        }
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:4200")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
+        };
     }
-
-
-
-
+}
